@@ -506,7 +506,7 @@ namespace Microsoft.Framework.DesignTimeHost
                     {
                         var engine = new NonLoadingLoadContext();
 
-                        compilation.ProjectReference.Load(engine);
+                        compilation.ProjectReference.Load(new AssemblyName(_local.ProjectInformation.Name), engine);
 
                         compilation.AssemblyBytes = engine.AssemblyBytes ?? new byte[0];
                         compilation.PdbBytes = engine.PdbBytes ?? new byte[0];

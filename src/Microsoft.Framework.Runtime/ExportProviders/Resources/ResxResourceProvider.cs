@@ -39,6 +39,7 @@ namespace Microsoft.Framework.Runtime
 
                        return new ResourceDescriptor()
                        {
+                           FileName = Path.GetFileName(resourceName),
                            Name = CreateCSharpManifestResourceName.CreateManifestName(resourceName, rootNamespace),
                            StreamFactory = () => GetResourceStream(resourceFile.Key),
                        };

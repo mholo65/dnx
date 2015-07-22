@@ -41,7 +41,7 @@ namespace Microsoft.Framework.Runtime.Compilation.DesignTime
             throw new NotSupportedException();
         }
 
-        public Assembly Load(IAssemblyLoadContext loadContext)
+        public Assembly Load(AssemblyName assemblyName, IAssemblyLoadContext loadContext)
         {
             if (_response.Diagnostics.HasErrors())
             {

@@ -27,7 +27,7 @@ namespace Microsoft.Framework.Runtime.Roslyn.Tests
                 () =>
                 {
                     resourceResolverInvoked = true;
-                    return new List<CodeAnalysis.ResourceDescription>();
+                    return new List<ResourceDescriptor>();
                 });
 
             Assert.NotNull(context.Modules);

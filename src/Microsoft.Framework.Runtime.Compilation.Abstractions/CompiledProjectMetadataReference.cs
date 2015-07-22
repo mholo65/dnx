@@ -42,7 +42,7 @@ namespace Microsoft.Framework.Runtime.Compilation
                                        .ToList();
         }
 
-        public Assembly Load(IAssemblyLoadContext loadContext)
+        public Assembly Load(AssemblyName assemblyName, IAssemblyLoadContext loadContext)
         {
             return loadContext.LoadFile(_assemblyPath);
         }
