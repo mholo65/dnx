@@ -72,30 +72,5 @@ namespace Microsoft.Dnx.Runtime
         public void Initialize(IEnumerable<RuntimeLibrary> dependencies, FrameworkName targetFramework, string runtimeIdentifier)
         {
         }
-
-        //public LibraryExport GetLibraryExport(CompilationTarget target)
-        //{
-        //    // Did we even resolve this name, if not then do nothing
-        //    if (!_resolvedPaths.ContainsKey(target.Name))
-        //    {
-        //        return null;
-        //    }
-
-        //    // We can't use resolved paths since it might be different to the target framework
-        //    // being passed in here. After we know this resolver is handling the
-        //    // requested name, we can call back into the FrameworkResolver to figure out
-        //    //  the specific path for the target framework
-
-        //    string path;
-        //    Version version;
-
-        //    var asmName = LibraryRange.GetAssemblyName(target.Name);
-        //    if (FrameworkResolver.TryGetAssembly(asmName, target.TargetFramework, out path, out version))
-        //    {
-        //        return new LibraryExport(new MetadataFileReference(asmName, path));
-        //    }
-
-        //    return null;
-        //}
     }
 }

@@ -10,14 +10,15 @@ namespace Microsoft.Dnx.Runtime.Compilation
     public class LibraryExporter : ILibraryExporter
     {
         // Taking LibraryExporter as an arg allows this list to be static but the methods to be instance :)
-        private static Dictionary<string, Func<LibraryExporter, RuntimeLibrary, LibraryExport>> _exporters = new Dictionary<string, Func<LibraryExporter, RuntimeLibrary, LibraryExport>>()
+        private static Dictionary<string, Func<LibraryExporter, RuntimeLibrary, CompilationTarget, LibraryExport>> _exporters = new Dictionary<string, Func<LibraryExporter, RuntimeLibrary, CompilationTarget, LibraryExport>>()
         {
             { LibraryTypes.GlobalAssemblyCache, (e, l) => e.ExportAssemblyLibrary(l) },
-            { LibraryTypes.ReferenceAssembly, (e, l) => e.ExportAssemblyLibrary(l) },
+            { LibraryTypes.ReferenceAssembly, (e, l) => e.ExportReferenceAssembly(l) },
             { LibraryTypes.Project, (e, l) => e.ExportProject(l) },
             { LibraryTypes.Package, (e, l) => e.ExportPackage(l) },
         };
 
+        private readonly IFrameworkReferenceResolver _frameworkReferenceResolver;
         private readonly ILibraryManager _libraryManager;
         private readonly FrameworkName _targetFramework;
         private readonly string _configuration;
@@ -26,12 +27,14 @@ namespace Microsoft.Dnx.Runtime.Compilation
         public LibraryExporter(FrameworkName targetFramework,
                                string configuration,
                                ILibraryManager libraryManager,
-                               ICache cache)
+                               ICache cache,
+                               IFrameworkReferenceResolver frameworkReferenceResolver)
         {
             _targetFramework = targetFramework;
             _configuration = configuration;
             _libraryManager = libraryManager;
             _cache = cache;
+            _frameworkReferenceResolver = frameworkReferenceResolver;
         }
 
         public LibraryExport GetLibraryExport(string name)
@@ -59,30 +62,49 @@ namespace Microsoft.Dnx.Runtime.Compilation
             throw new NotImplementedException();
         }
 
-        private LibraryExport ExportLibrary(RuntimeLibrary library)
+        private LibraryExport ExportLibrary(RuntimeLibrary library, CompilationTarget target)
         {
-            Func<LibraryExporter, RuntimeLibrary, LibraryExport> exporter;
+            Func<LibraryExporter, RuntimeLibrary, CompilationTarget, LibraryExport> exporter;
             if(!_exporters.TryGetValue(library.Type, out exporter))
             {
                 return LibraryExport.Empty;
             }
-            return exporter(this, library);
+            return exporter(this, library, target);
         }
 
-        private LibraryExport ExportPackage(RuntimeLibrary library)
+        private LibraryExport ExportPackage(RuntimeLibrary library, CompilationTarget target)
         {
             throw new NotImplementedException();
         }
 
-        private LibraryExport ExportProject(RuntimeLibrary library)
+        private LibraryExport ExportProject(RuntimeLibrary library, CompilationTarget target)
         {
             throw new NotImplementedException();
         }
 
-        private LibraryExport ExportAssemblyLibrary(RuntimeLibrary library)
+        private LibraryExport ExportAssemblyLibrary(RuntimeLibrary library, CompilationTarget target)
         {
-            // Assume the path to the library is the path to the DLL
+            // Just use the path as the path to the managed assembly
             return new LibraryExport(new MetadataFileReference(library.Identity.Name, library.Path));
         }
+
+        private LibraryExport ExportReferenceAssembly(RuntimeLibrary library, CompilationTarget target)
+        {
+            // We can't use resolved paths since it might be different to the target framework
+            // being passed in here. After we know this resolver is handling the
+            // requested name, we can call back into the FrameworkResolver to figure out
+            //  the specific path for the target framework
+
+            string path;
+            Version version;
+
+            var asmName = LibraryRange.GetAssemblyName(target.Name);
+            if (_frameworkReferenceResolver.TryGetAssembly(asmName, target.TargetFramework, out path, out version))
+            {
+                return new LibraryExport(new MetadataFileReference(asmName, path));
+            }
+            return null;
+        }
+
     }
 }
