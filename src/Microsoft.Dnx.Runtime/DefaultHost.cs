@@ -8,10 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Versioning;
-using Microsoft.Dnx.Compilation;
-using Microsoft.Dnx.Compilation.Caching;
 using Microsoft.Dnx.Runtime.Common.DependencyInjection;
-using Microsoft.Dnx.Runtime.FileSystem;
 using Microsoft.Dnx.Runtime.Infrastructure;
 using Microsoft.Dnx.Runtime.Loader;
 using NuGet;
@@ -22,18 +19,20 @@ namespace Microsoft.Dnx.Runtime
     {
         private ApplicationHostContext _applicationHostContext;
 
-        private IFileWatcher _watcher;
         private readonly string _projectDirectory;
         private readonly FrameworkName _targetFramework;
         private readonly ApplicationShutdown _shutdown = new ApplicationShutdown();
+        private readonly ICompilationEngine _compilation;
 
         private Project _project;
 
         public DefaultHost(RuntimeOptions options,
-                           IServiceProvider hostServices)
+                           IServiceProvider hostServices,
+                           ICompilationEngine compilation)
         {
             _projectDirectory = Path.GetFullPath(options.ApplicationBaseDirectory);
             _targetFramework = options.TargetFramework;
+            _compilation = compilation;
 
             Initialize(options, hostServices);
         }
@@ -130,24 +129,17 @@ Please make sure the runtime matches a framework specified in {Project.ProjectFi
 
         public void Dispose()
         {
-            _watcher.Dispose();
+            _compilation.Dispose();
         }
 
         private void Initialize(RuntimeOptions options, IServiceProvider hostServices)
         {
-            var cacheContextAccessor = new CacheContextAccessor();
-            var cache = new Cache(cacheContextAccessor);
-            var namedCacheDependencyProvider = new NamedCacheDependencyProvider();
-
             _applicationHostContext = new ApplicationHostContext(
                 hostServices,
                 _projectDirectory,
                 options.PackageDirectory,
                 options.Configuration,
-                _targetFramework,
-                cache,
-                cacheContextAccessor,
-                namedCacheDependencyProvider);
+                _targetFramework);
 
             Logger.TraceInformation("[{0}]: Project path: {1}", GetType().Name, _projectDirectory);
             Logger.TraceInformation("[{0}]: Project root: {1}", GetType().Name, _applicationHostContext.RootDirectory);
@@ -163,21 +155,14 @@ Please make sure the runtime matches a framework specified in {Project.ProjectFi
 
             if (options.WatchFiles)
             {
-                var watcher = new FileWatcher(_applicationHostContext.RootDirectory);
-                _watcher = watcher;
-                watcher.OnChanged += _ =>
+                _compilation.OnInputFileChanged += _ =>
                 {
                     _shutdown.RequestShutdownWaitForDebugger();
                 };
             }
-            else
-            {
-                _watcher = NoopWatcher.Instance;
-            }
 
             _applicationHostContext.AddService(typeof(IApplicationShutdown), _shutdown);
             _applicationHostContext.AddService(typeof(RuntimeOptions), options);
-            _applicationHostContext.AddService(typeof(IFileWatcher), _watcher);
 
             if (options.CompilationServerPort.HasValue)
             {

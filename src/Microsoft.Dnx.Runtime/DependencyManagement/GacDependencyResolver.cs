@@ -6,13 +6,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
-using Microsoft.Dnx.Compilation;
 using Microsoft.Framework.Runtime;
 using NuGet;
 
 namespace Microsoft.Dnx.Runtime
 {
-    public class GacDependencyResolver : IDependencyProvider, ILibraryExportProvider
+    public class GacDependencyResolver : IDependencyProvider
     {
         private readonly Dictionary<string, string> _resolvedPaths = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -72,17 +71,6 @@ namespace Microsoft.Dnx.Runtime
             {
                 d.Path = _resolvedPaths[d.Identity.Name];
             }
-        }
-
-        public LibraryExport GetLibraryExport(CompilationTarget target)
-        {
-            string assemblyPath;
-            if (_resolvedPaths.TryGetValue(target.Name, out assemblyPath))
-            {
-                return new LibraryExport(new MetadataFileReference(target.Name, assemblyPath));
-            }
-
-            return null;
         }
 
         private bool TryResolvePartialName(string name, SemanticVersion version, out string assemblyLocation)

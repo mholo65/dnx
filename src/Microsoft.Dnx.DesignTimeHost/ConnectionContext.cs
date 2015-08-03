@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Microsoft.Dnx.Compilation;
 using Microsoft.Dnx.Compilation.Caching;
 using Microsoft.Dnx.DesignTimeHost.Models;
 using Microsoft.Dnx.Runtime;
@@ -20,21 +21,18 @@ namespace Microsoft.Dnx.DesignTimeHost
         private readonly ProtocolManager _protocolManager;
         private ProcessingQueue _queue;
         private string _hostId;
+        private readonly CompilationEngine _compilationEngine;
 
         public ConnectionContext(IDictionary<int, ApplicationContext> contexts,
                                  IServiceProvider services,
-                                 ICache cache,
-                                 ICacheContextAccessor cacheContextAccessor,
-                                 INamedCacheDependencyProvider namedDependencyProvider,
+                                 CompilationEngine compilationEngine,
                                  ProcessingQueue queue,
                                  ProtocolManager protocolManager,
                                  string hostId)
         {
             _contexts = contexts;
             _services = services;
-            _cache = cache;
-            _cacheContextAccessor = cacheContextAccessor;
-            _namedDependencyProvider = namedDependencyProvider;
+            _compilationEngine = compilationEngine;
             _queue = queue;
             _hostId = hostId;
             _protocolManager = protocolManager;
@@ -69,9 +67,7 @@ namespace Microsoft.Dnx.DesignTimeHost
                     Logger.TraceInformation("[ConnectionContext]: Creating new application context for {0}", message.ContextId);
 
                     applicationContext = new ApplicationContext(_services,
-                                                                _cache,
-                                                                _cacheContextAccessor,
-                                                                _namedDependencyProvider,
+                                                                _compilationEngine,
                                                                 _protocolManager,
                                                                 message.ContextId);
 

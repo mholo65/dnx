@@ -4,9 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.Dnx.Compilation;
+using Microsoft.Dnx.Runtime;
 
-namespace Microsoft.Dnx.Runtime.FileSystem
+namespace Microsoft.Dnx.Compilation.FileSystem
 {
     public class FileWatcher : IFileWatcher
     {

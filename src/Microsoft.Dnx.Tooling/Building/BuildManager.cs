@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Microsoft.Dnx.Compilation;
 using Microsoft.Dnx.Compilation.Caching;
 using Microsoft.Dnx.Runtime;
 using Microsoft.Dnx.Tooling.SourceControl;
@@ -22,9 +23,8 @@ namespace Microsoft.Dnx.Tooling
         private readonly IApplicationEnvironment _applicationEnvironment;
         private readonly BuildOptions _buildOptions;
 
-        // These are shared by all projects that will be built by this class
-        private CacheContextAccessor _cacheContextAccessor;
-        private Cache _cache;
+        // Shared by all projects that will be built by this class
+        private CompilationEngine _compilationEngine;
 
         private Runtime.Project _currentProject;
 
@@ -67,8 +67,7 @@ namespace Microsoft.Dnx.Tooling
 
             var sw = Stopwatch.StartNew();
 
-            _cacheContextAccessor = new CacheContextAccessor();
-            _cache = new Cache(_cacheContextAccessor);
+            _compilationEngine = new CompilationEngine();
 
             var globalSucess = true;
             foreach (var project in projectFilesToBuild)
@@ -172,8 +171,7 @@ namespace Microsoft.Dnx.Tooling
 
                     var context = new BuildContext(_hostServices,
                                                    _applicationEnvironment,
-                                                   _cache,
-                                                   _cacheContextAccessor,
+                                                   _compilationEngine,
                                                    _currentProject,
                                                    targetFramework,
                                                    configuration,

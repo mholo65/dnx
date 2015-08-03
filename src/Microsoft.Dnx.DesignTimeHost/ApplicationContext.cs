@@ -26,9 +26,6 @@ namespace Microsoft.Dnx.DesignTimeHost
     public class ApplicationContext
     {
         private readonly IServiceProvider _hostServices;
-        private readonly ICache _cache;
-        private readonly ICacheContextAccessor _cacheContextAccessor;
-        private readonly INamedCacheDependencyProvider _namedDependencyProvider;
         private readonly IApplicationEnvironment _appEnv;
         private readonly Queue<Message> _inbox = new Queue<Message>();
         private readonly object _processingLock = new object();
@@ -52,19 +49,16 @@ namespace Microsoft.Dnx.DesignTimeHost
         private readonly PluginHandler _pluginHandler;
         private readonly ProtocolManager _protocolManager;
         private int? _contextProtocolVersion;
+        private readonly CompilationEngine _compilationEngine;
 
         public ApplicationContext(IServiceProvider services,
-                                  ICache cache,
-                                  ICacheContextAccessor cacheContextAccessor,
-                                  INamedCacheDependencyProvider namedDependencyProvider,
+                                  CompilationEngine compilationEngine,
                                   ProtocolManager protocolManager,
                                   int id)
         {
             _hostServices = services;
             _appEnv = (IApplicationEnvironment)services.GetService(typeof(IApplicationEnvironment));
-            _cache = cache;
-            _cacheContextAccessor = cacheContextAccessor;
-            _namedDependencyProvider = namedDependencyProvider;
+            _compilationEngine = compilationEngine;
             _pluginHandler = new PluginHandler(services, SendPluginMessage);
             _protocolManager = protocolManager;
 
@@ -563,7 +557,7 @@ namespace Microsoft.Dnx.DesignTimeHost
 
         private bool UpdateProjectCompilation(ProjectWorld project, out ProjectCompilation compilation)
         {
-            var export = project.ApplicationHostContext.LibraryExporter.GetLibraryExport(_local.ProjectInformation.Name);
+            var export = project.CompilationEngine.LibraryExporter.GetLibraryExport(_local.ProjectInformation.Name);
 
             ProjectCompilation oldCompilation;
             if (!_compilations.TryGetValue(project.TargetFramework, out oldCompilation) ||
@@ -972,12 +966,12 @@ namespace Microsoft.Dnx.DesignTimeHost
             if (triggerBuildOutputs)
             {
                 // Trigger the build outputs for this project
-                _namedDependencyProvider.Trigger(project.Name + "_BuildOutputs");
+                _compilationEngine.NamedCacheDependencyProvider.Trigger(project.Name + "_BuildOutputs");
             }
 
             if (triggerDependencies)
             {
-                _namedDependencyProvider.Trigger(project.Name + "_Dependencies");
+                _compilationEngine.NamedCacheDependencyProvider.Trigger(project.Name + "_Dependencies");
             }
 
             state.Name = project.Name;
@@ -1069,16 +1063,13 @@ namespace Microsoft.Dnx.DesignTimeHost
         {
             var cacheKey = Tuple.Create("ApplicationContext", project.Name, configuration, frameworkName);
 
-            return _cache.Get<ApplicationHostContext>(cacheKey, ctx =>
+            return _compilationEngine.Cache.Get<ApplicationHostContext>(cacheKey, ctx =>
             {
                 var applicationHostContext = new ApplicationHostContext(_hostServices,
                                                                         project.ProjectDirectory,
                                                                         packagesDirectory: null,
                                                                         configuration: configuration,
                                                                         targetFramework: frameworkName,
-                                                                        cache: _cache,
-                                                                        cacheContextAccessor: _cacheContextAccessor,
-                                                                        namedCacheDependencyProvider: _namedDependencyProvider,
                                                                         loadContextFactory: GetRuntimeLoadContextFactory(project),
                                                                         skipLockFileValidation: true);
 
@@ -1094,7 +1085,7 @@ namespace Microsoft.Dnx.DesignTimeHost
                 }
 
                 // Add a cache dependency on restore complete to reevaluate dependencies
-                ctx.Monitor(_namedDependencyProvider.GetNamedDependency(project.Name + "_Dependencies"));
+                ctx.Monitor(_compilationEngine.NamedCacheDependencyProvider.GetNamedDependency(project.Name + "_Dependencies"));
 
                 return applicationHostContext;
             });
@@ -1105,16 +1096,14 @@ namespace Microsoft.Dnx.DesignTimeHost
             return new DesignTimeAssemblyLoadContextFactory(
                 project,
                 _appEnv,
-                _cache,
-                _cacheContextAccessor,
-                _namedDependencyProvider);
+                _compilationEngine);
         }
 
         private DependencyInfo ResolveProjectDepencies(Project project, string configuration, FrameworkName frameworkName)
         {
             var cacheKey = Tuple.Create("DependencyInfo", project.Name, configuration, frameworkName);
 
-            return _cache.Get<DependencyInfo>(cacheKey, ctx =>
+            return _compilationEngine.Cache.Get<DependencyInfo>(cacheKey, ctx =>
             {
                 var applicationHostContext = GetApplicationHostContext(project, configuration, frameworkName);
 
@@ -1189,11 +1178,7 @@ namespace Microsoft.Dnx.DesignTimeHost
                     }
                 }
 
-                var exportWithoutProjects = ProjectExportProviderHelper.GetExportsRecursive(
-                    applicationHostContext.LibraryManager,
-                    applicationHostContext.LibraryExportProvider,
-                    new CompilationTarget(project.Name, frameworkName, configuration, aspect: null),
-                    library => library.Type != "Project");
+                var exportWithoutProjects = _compilationEngine.LibraryExporter.GetAllExports(project.Name, includeProjects: false);
 
                 foreach (var reference in exportWithoutProjects.MetadataReferences)
                 {

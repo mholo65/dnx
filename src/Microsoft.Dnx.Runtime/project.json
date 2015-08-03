@@ -13,14 +13,13 @@
         "../../ext/compiler/preprocess/Internalization.cs"
     ],
     "dependencies": {
-        "Microsoft.Dnx.Compilation.CSharp.Abstractions": { "version": "1.0.0-*", "type": "build" },
-        "Microsoft.Dnx.Compilation": "1.0.0-*",
-        "Microsoft.Dnx.Compilation.Abstractions": "1.0.0-*",
         "Microsoft.Dnx.Loader": "1.0.0-*",
         "Microsoft.Dnx.Runtime.Abstractions": "1.0.0-*",
         "Microsoft.Dnx.Runtime.Internals": { "version": "1.0.0-*", "type": "build" },
         "Microsoft.Dnx.Runtime.Sources": { "version": "1.0.0-*", "type": "build" },
-        "Microsoft.CodeAnalysis.CSharp": { "version": "1.0.0-*", "type": "build" }
+        "Microsoft.Dnx.Compilation.CSharp.Abstractions": { "version": "1.0.0-*", "type": "build" },
+        "Microsoft.CodeAnalysis.CSharp": { "version": "1.0.0-*", "type": "build" },
+        "System.Reflection.Metadata": "1.0.21"
     },
     "frameworks": {
         "dnx451": {
@@ -43,7 +42,6 @@
                 "System.Dynamic.Runtime": "4.0.10-beta-*",
                 "System.Globalization": "4.0.10-beta-*",
                 "System.IO.Compression": "4.0.0-beta-*",
-                "System.IO.FileSystem.Watcher": "4.0.0-beta-*",
                 "System.Linq": "4.0.0-beta-*",
                 "System.Reflection.Extensions": "4.0.0-beta-*",
                 "System.Resources.ResourceManager": "4.0.0-beta-*",

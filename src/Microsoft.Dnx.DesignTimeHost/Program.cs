@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using Microsoft.Dnx.Compilation;
 using Microsoft.Dnx.Compilation.Caching;
 using Microsoft.Dnx.DesignTimeHost.Models;
 using Microsoft.Dnx.Runtime;
@@ -57,9 +58,7 @@ namespace Microsoft.Dnx.DesignTimeHost
 
         private async Task OpenChannel(int port, string hostId)
         {
-            var cacheContextAccessor = new CacheContextAccessor();
-            var cache = new Cache(cacheContextAccessor);
-            var namedDependencyProvider = new NamedCacheDependencyProvider();
+            var compilationEngine = new CompilationEngine();
             var contexts = new Dictionary<int, ApplicationContext>();
             var services = new ServiceProvider(_services);
             var protocolManager = new ProtocolManager(maxVersion: 2);
@@ -82,9 +81,7 @@ namespace Microsoft.Dnx.DesignTimeHost
                 var connection = new ConnectionContext(
                     contexts,
                     services,
-                    cache,
-                    cacheContextAccessor,
-                    namedDependencyProvider,
+                    compilationEngine,
                     queue,
                     protocolManager,
                     hostId);

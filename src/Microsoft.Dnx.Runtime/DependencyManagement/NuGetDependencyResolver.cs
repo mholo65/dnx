@@ -7,14 +7,13 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Versioning;
-using Microsoft.Dnx.Compilation;
 using Microsoft.Dnx.Runtime.DependencyManagement;
 using Microsoft.Framework.Runtime;
 using NuGet;
 
 namespace Microsoft.Dnx.Runtime
 {
-    public class NuGetDependencyResolver : IDependencyProvider, ILibraryExportProvider
+    public class NuGetDependencyResolver : IDependencyProvider
     {
         private IDictionary<Tuple<string, FrameworkName, string>, LockFileTargetLibrary> _lookup;
         private readonly PackageRepository _repository;
@@ -358,61 +357,61 @@ namespace Microsoft.Dnx.Runtime
                                         .Select(path => new DefaultPackagePathResolver(path));
         }
 
-        public LibraryExport GetLibraryExport(CompilationTarget target)
-        {
-            PackageDescription description;
-            if (!_packageDescriptions.TryGetValue(target.Name, out description))
-            {
-                return null;
-            }
+        //public LibraryExport GetLibraryExport(CompilationTarget target)
+        //{
+        //    PackageDescription description;
+        //    if (!_packageDescriptions.TryGetValue(target.Name, out description))
+        //    {
+        //        return null;
+        //    }
 
-            var references = new Dictionary<string, IMetadataReference>(StringComparer.OrdinalIgnoreCase);
+        //    var references = new Dictionary<string, IMetadataReference>(StringComparer.OrdinalIgnoreCase);
 
-            if (!TryPopulateMetadataReferences(description, target.TargetFramework, references))
-            {
-                return null;
-            }
+        //    if (!TryPopulateMetadataReferences(description, target.TargetFramework, references))
+        //    {
+        //        return null;
+        //    }
 
-            // REVIEW: This requires more design
-            var sourceReferences = new List<ISourceReference>();
+        //    // REVIEW: This requires more design
+        //    var sourceReferences = new List<ISourceReference>();
 
-            foreach (var sharedSource in GetSharedSources(description, target.TargetFramework))
-            {
-                sourceReferences.Add(new SourceFileReference(sharedSource));
-            }
+        //    foreach (var sharedSource in GetSharedSources(description, target.TargetFramework))
+        //    {
+        //        sourceReferences.Add(new SourceFileReference(sharedSource));
+        //    }
 
-            return new LibraryExport(references.Values.ToList(), sourceReferences);
-        }
+        //    return new LibraryExport(references.Values.ToList(), sourceReferences);
+        //}
 
-        private bool TryPopulateMetadataReferences(PackageDescription description, FrameworkName targetFramework, IDictionary<string, IMetadataReference> paths)
-        {
-            if (_lookup == null)
-            {
-                return false;
-            }
+        //private bool TryPopulateMetadataReferences(PackageDescription description, FrameworkName targetFramework, IDictionary<string, IMetadataReference> paths)
+        //{
+        //    if (_lookup == null)
+        //    {
+        //        return false;
+        //    }
 
-            var lookupKey = Tuple.Create((string)null, targetFramework, description.Package.LockFileLibrary.Name);
+        //    var lookupKey = Tuple.Create((string)null, targetFramework, description.Package.LockFileLibrary.Name);
 
-            LockFileTargetLibrary targetLibrary;
-            if (!_lookup.TryGetValue(lookupKey, out targetLibrary))
-            {
-                return false;
-            }
+        //    LockFileTargetLibrary targetLibrary;
+        //    if (!_lookup.TryGetValue(lookupKey, out targetLibrary))
+        //    {
+        //        return false;
+        //    }
 
-            foreach (var assemblyPath in targetLibrary.CompileTimeAssemblies)
-            {
-                if (IsPlaceholderFile(assemblyPath))
-                {
-                    continue;
-                }
+        //    foreach (var assemblyPath in targetLibrary.CompileTimeAssemblies)
+        //    {
+        //        if (IsPlaceholderFile(assemblyPath))
+        //        {
+        //            continue;
+        //        }
 
-                var name = Path.GetFileNameWithoutExtension(assemblyPath);
-                var path = Path.Combine(description.Library.Path, assemblyPath);
-                paths[name] = new MetadataFileReference(name, path);
-            }
+        //        var name = Path.GetFileNameWithoutExtension(assemblyPath);
+        //        var path = Path.Combine(description.Library.Path, assemblyPath);
+        //        paths[name] = new MetadataFileReference(name, path);
+        //    }
 
-            return true;
-        }
+        //    return true;
+        //}
 
         private IEnumerable<string> GetSharedSources(PackageDescription description, FrameworkName targetFramework)
         {

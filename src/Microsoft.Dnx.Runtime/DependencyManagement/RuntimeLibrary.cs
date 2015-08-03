@@ -44,7 +44,6 @@ namespace Microsoft.Dnx.Runtime
 
         public LibraryRange RequestedRange { get; }
         public LibraryIdentity Identity { get; }
-        public IEnumerable<LibraryDependency> Dependencies { get; set; }
 
         public string Type { get; }
         public FrameworkName Framework { get; }
@@ -53,6 +52,7 @@ namespace Microsoft.Dnx.Runtime
         public bool Resolved { get; set; } = true;
         public bool Compatible { get; set; } = true;
         public IEnumerable<string> Assemblies { get; set; }
+        public IEnumerable<LibraryDependency> Dependencies { get; set; }
 
         public Library ToLibrary()
         {

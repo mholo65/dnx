@@ -15,5 +15,8 @@ namespace Microsoft.Dnx.Compilation
         LibraryExport GetAllExports(string name);
 
         LibraryExport GetAllExports(string name, string aspect);
+
+        // TODO(anurse): Clean this up before review!
+        LibraryExport GetAllExports(string name, bool includeProjects);
     }
 }

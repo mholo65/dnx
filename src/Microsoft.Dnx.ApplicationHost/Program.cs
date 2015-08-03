@@ -7,11 +7,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Dnx.Compilation;
 using Microsoft.Dnx.Runtime;
 using Microsoft.Dnx.Runtime.CommandParsing;
 using Microsoft.Dnx.Runtime.Common;
 using Microsoft.Dnx.Runtime.Common.CommandLine;
-using Microsoft.Dnx.Compilation;
 
 namespace Microsoft.Dnx.ApplicationHost
 {
@@ -40,7 +40,7 @@ namespace Microsoft.Dnx.ApplicationHost
                 return Task.FromResult(exitCode);
             }
 
-            var host = new DefaultHost(options, _serviceProvider);
+            var host = new DefaultHost(options, _serviceProvider, new CompilationEngine());
 
             if (host.Project == null)
             {
