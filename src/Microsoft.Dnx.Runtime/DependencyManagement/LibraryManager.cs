@@ -157,7 +157,7 @@ namespace Microsoft.Dnx.Runtime
         private static Func<IEnumerable<Library>> GetLibraryInfoThunk(DependencyWalker dependencyWalker)
         {
             return () => dependencyWalker.Libraries
-                                         .Select(libraryDescription => libraryDescription.ToLibrary());
+                                         .Select(runtimeLibrary => runtimeLibrary.ToLibrary());
         }
 
         private static void AddRange(HashSet<Library> source, IEnumerable<Library> values)

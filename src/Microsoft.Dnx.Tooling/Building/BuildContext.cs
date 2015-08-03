@@ -76,7 +76,7 @@ namespace Microsoft.Dnx.Tooling
                                                                 .Dependencies
                                                                 .ToDictionary(r => r.Identity.Name);
 
-            LibraryDescription description;
+            RuntimeLibrary description;
             if (!projectReferenceByName.TryGetValue(_project.Name, out description))
             {
                 return;

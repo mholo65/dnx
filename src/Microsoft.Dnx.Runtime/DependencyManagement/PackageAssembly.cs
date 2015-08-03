@@ -9,6 +9,6 @@ namespace Microsoft.Dnx.Runtime
     {
         public string Path { get; set; }
         public string RelativePath { get; set; }
-        public LibraryDescription Library { get; set; }
+        public RuntimeLibrary Library { get; set; }
     }
 }

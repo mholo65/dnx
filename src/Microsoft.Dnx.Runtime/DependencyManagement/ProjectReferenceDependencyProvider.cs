@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
+using Microsoft.Framework.Runtime;
 using NuGet;
 
 namespace Microsoft.Dnx.Runtime
@@ -16,17 +17,17 @@ namespace Microsoft.Dnx.Runtime
         public ProjectReferenceDependencyProvider(IProjectResolver projectResolver)
         {
             _projectResolver = projectResolver;
-            Dependencies = Enumerable.Empty<LibraryDescription>();
+            Dependencies = Enumerable.Empty<RuntimeLibrary>();
         }
 
-        public IEnumerable<LibraryDescription> Dependencies { get; private set; }
+        public IEnumerable<RuntimeLibrary> Dependencies { get; private set; }
 
         public IEnumerable<string> GetAttemptedPaths(FrameworkName targetFramework)
         {
             return _projectResolver.SearchPaths.Select(p => Path.Combine(p, "{name}", "project.json"));
         }
 
-        public LibraryDescription GetDescription(LibraryRange libraryRange, FrameworkName targetFramework)
+        public RuntimeLibrary GetDescription(LibraryRange libraryRange, FrameworkName targetFramework)
         {
             if (libraryRange.IsGacOrFrameworkReference)
             {
@@ -84,25 +85,21 @@ namespace Microsoft.Dnx.Runtime
             bool unresolved = targetFrameworkInfo.FrameworkName == null &&
                               project.GetTargetFrameworks().Any();
 
-            return new LibraryDescription
+            return new RuntimeLibrary(
+                libraryRange,
+                new LibraryIdentity(project.Name, project.Version, isGacOrFrameworkReference: false),
+                LibraryTypes.Project,
+                dependencies,
+                loadableAssemblies,
+                targetFrameworkInfo.FrameworkName)
             {
-                LibraryRange = libraryRange,
-                Identity = new LibraryIdentity
-                {
-                    Name = project.Name,
-                    Version = project.Version
-                },
-                Type = "Project",
                 Path = project.ProjectFilePath,
-                Framework = targetFrameworkInfo.FrameworkName,
-                Dependencies = dependencies,
-                LoadableAssemblies = loadableAssemblies,
                 Compatible = !unresolved,
                 Resolved = !unresolved
             };
         }
 
-        public virtual void Initialize(IEnumerable<LibraryDescription> dependencies, FrameworkName targetFramework, string runtimeIdentifier)
+        public virtual void Initialize(IEnumerable<RuntimeLibrary> dependencies, FrameworkName targetFramework, string runtimeIdentifier)
         {
             Dependencies = dependencies;
         }

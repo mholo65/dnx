@@ -20,13 +20,13 @@ namespace Microsoft.Dnx.Tooling.Publish
     {
         private readonly ProjectReferenceDependencyProvider _projectReferenceDependencyProvider;
         private readonly IProjectResolver _projectResolver;
-        private readonly LibraryDescription _libraryDescription;
+        private readonly RuntimeLibrary _libraryDescription;
         private string _relativeAppBase;
 
         public PublishProject(
             ProjectReferenceDependencyProvider projectReferenceDependencyProvider,
             IProjectResolver projectResolver,
-            LibraryDescription libraryDescription)
+            RuntimeLibrary libraryDescription)
         {
             _projectReferenceDependencyProvider = projectReferenceDependencyProvider;
             _projectResolver = projectResolver;

@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Runtime.Versioning;
 using Microsoft.Dnx.Compilation;
 using Microsoft.Dnx.Runtime.DependencyManagement;
+using Microsoft.Framework.Runtime;
 using NuGet;
 
 namespace Microsoft.Dnx.Runtime
@@ -27,7 +28,7 @@ namespace Microsoft.Dnx.Runtime
         public NuGetDependencyResolver(PackageRepository repository)
         {
             _repository = repository;
-            Dependencies = Enumerable.Empty<LibraryDescription>();
+            Dependencies = Enumerable.Empty<RuntimeLibrary>();
         }
 
         public IDictionary<AssemblyName, PackageAssembly> PackageAssemblyLookup
@@ -38,7 +39,7 @@ namespace Microsoft.Dnx.Runtime
             }
         }
 
-        public IEnumerable<LibraryDescription> Dependencies { get; private set; }
+        public IEnumerable<RuntimeLibrary> Dependencies { get; private set; }
 
         public void ApplyLockFile(LockFile lockFile)
         {
@@ -64,7 +65,7 @@ namespace Microsoft.Dnx.Runtime
             };
         }
 
-        public LibraryDescription GetDescription(LibraryRange libraryRange, FrameworkName targetFramework)
+        public RuntimeLibrary GetDescription(LibraryRange libraryRange, FrameworkName targetFramework)
         {
             if (libraryRange.IsGacOrFrameworkReference)
             {
@@ -127,16 +128,12 @@ namespace Microsoft.Dnx.Runtime
                     dependencies = GetDependencies(package, targetFramework, targetLibrary: null);
                 }
 
-                return new LibraryDescription
+                return new RuntimeLibrary(
+                    libraryRange,
+                    new LibraryIdentity(package.Id, package.Version, isGacOrFrameworkReference: false),
+                    LibraryTypes.Package,
+                    dependencies)
                 {
-                    LibraryRange = libraryRange,
-                    Identity = new LibraryIdentity
-                    {
-                        Name = package.Id,
-                        Version = package.Version
-                    },
-                    Type = "Package",
-                    Dependencies = dependencies,
                     Resolved = resolved,
                     Compatible = compatible
                 };
@@ -227,7 +224,7 @@ namespace Microsoft.Dnx.Runtime
             }
         }
 
-        public void Initialize(IEnumerable<LibraryDescription> packages, FrameworkName targetFramework, string runtimeIdentifier)
+        public void Initialize(IEnumerable<RuntimeLibrary> packages, FrameworkName targetFramework, string runtimeIdentifier)
         {
             Dependencies = packages;
 
@@ -323,7 +320,7 @@ namespace Microsoft.Dnx.Runtime
                     assemblies.Add(name);
                 }
 
-                dependency.LoadableAssemblies = assemblies;
+                dependency.Assemblies = assemblies;
             }
         }
 
@@ -513,7 +510,7 @@ namespace Microsoft.Dnx.Runtime
         {
             public PackageInfo Package { get; set; }
 
-            public LibraryDescription Library { get; set; }
+            public RuntimeLibrary Library { get; set; }
 
             public string ContractPath { get; set; }
         }

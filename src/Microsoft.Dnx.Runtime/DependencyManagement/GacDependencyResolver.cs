@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
 using Microsoft.Dnx.Compilation;
+using Microsoft.Framework.Runtime;
 using NuGet;
 
 namespace Microsoft.Dnx.Runtime
@@ -30,7 +31,7 @@ namespace Microsoft.Dnx.Runtime
             return GetGacSearchPaths().Select(p => Path.Combine(p, "{name}", "{version}", "{name}.dll"));
         }
 
-        public LibraryDescription GetDescription(LibraryRange libraryRange, FrameworkName targetFramework)
+        public RuntimeLibrary GetDescription(LibraryRange libraryRange, FrameworkName targetFramework)
         {
             if (!libraryRange.IsGacOrFrameworkReference)
             {
@@ -58,26 +59,18 @@ namespace Microsoft.Dnx.Runtime
 
             _resolvedPaths[name] = path;
 
-            return new LibraryDescription
-            {
-                LibraryRange = libraryRange,
-                Identity = new LibraryIdentity
-                {
-                    Name = name,
-                    Version = version,
-                    IsGacOrFrameworkReference = true
-                },
-                LoadableAssemblies = new[] { libraryRange.GetReferenceAssemblyName() },
-                Dependencies = Enumerable.Empty<LibraryDependency>()
-            };
+            return new RuntimeLibrary(
+                libraryRange,
+                new LibraryIdentity(name, version, isGacOrFrameworkReference: true),
+                LibraryTypes.GlobalAssemblyCache,
+                new[] { libraryRange.GetReferenceAssemblyName() });
         }
 
-        public void Initialize(IEnumerable<LibraryDescription> dependencies, FrameworkName targetFramework, string runtimeIdentifier)
+        public void Initialize(IEnumerable<RuntimeLibrary> dependencies, FrameworkName targetFramework, string runtimeIdentifier)
         {
             foreach (var d in dependencies)
             {
                 d.Path = _resolvedPaths[d.Identity.Name];
-                d.Type = "Assembly";
             }
         }
 

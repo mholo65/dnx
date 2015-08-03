@@ -501,7 +501,7 @@ namespace Microsoft.Dnx.Tooling
                     if (!string.Equals(node.Item.Match.Library.Name, node.LibraryRange.Name, StringComparison.Ordinal))
                     {
                         // Fix casing of the library name to be installed
-                        node.Item.Match.Library.Name = node.LibraryRange.Name;
+                        node.Item.Match.Library = node.Item.Match.Library.ChangeName(node.LibraryRange.Name);
                     }
 
                     var isRemote = remoteProviders.Contains(node.Item.Match.Provider);

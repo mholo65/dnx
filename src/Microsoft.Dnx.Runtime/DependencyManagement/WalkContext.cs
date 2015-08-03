@@ -166,7 +166,7 @@ namespace Microsoft.Dnx.Runtime
                 return item;
             }
 
-            Tuple<IDependencyProvider, LibraryDescription> hit = null;
+            Tuple<IDependencyProvider, RuntimeLibrary> hit = null;
 
             foreach (var dependencyProvider in providers)
             {
@@ -205,7 +205,7 @@ namespace Microsoft.Dnx.Runtime
             return item;
         }
 
-        public void Populate(FrameworkName frameworkName, IList<LibraryDescription> libraries)
+        public void Populate(FrameworkName frameworkName, IList<RuntimeLibrary> libraries)
         {
             var sw = Stopwatch.StartNew();
 
@@ -215,15 +215,15 @@ namespace Microsoft.Dnx.Runtime
 
                 var descriptions = groupByResolver.Select(entry =>
                 {
-                    return new LibraryDescription
+                    return new RuntimeLibrary(
+                        entry.Value.Description.RequestedRange,
+                        entry.Value.Key,
+                        entry.Value.Description.Type,
+                        entry.Value.Description.Dependencies.SelectMany(CorrectDependencyVersion).ToList(),
+                        entry.Value.Description.Assemblies,
+                        entry.Value.Description.Framework ?? frameworkName)
                     {
-                        LibraryRange = entry.Value.Description.LibraryRange,
-                        Identity = entry.Value.Key,
                         Path = entry.Value.Description.Path,
-                        Type = entry.Value.Description.Type,
-                        Framework = entry.Value.Description.Framework ?? frameworkName,
-                        Dependencies = entry.Value.Dependencies.SelectMany(CorrectDependencyVersion).ToList(),
-                        LoadableAssemblies = entry.Value.Description.LoadableAssemblies ?? Enumerable.Empty<string>(),
                         Resolved = entry.Value.Description.Resolved,
                         Compatible = entry.Value.Description.Compatible
                     };
@@ -268,7 +268,7 @@ namespace Microsoft.Dnx.Runtime
         [DebuggerDisplay("{Key}")]
         private class Item
         {
-            public LibraryDescription Description { get; set; }
+            public RuntimeLibrary Description { get; set; }
             public LibraryIdentity Key { get; set; }
             public IDependencyProvider Resolver { get; set; }
             public IEnumerable<LibraryDependency> Dependencies { get; set; }

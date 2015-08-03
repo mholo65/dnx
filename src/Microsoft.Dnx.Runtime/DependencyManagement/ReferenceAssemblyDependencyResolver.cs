@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
 using Microsoft.Dnx.Compilation;
+using Microsoft.Framework.Runtime;
 using NuGet;
 
 namespace Microsoft.Dnx.Runtime
@@ -37,7 +38,7 @@ namespace Microsoft.Dnx.Runtime
             return Enumerable.Empty<string>();
         }
 
-        public LibraryDescription GetDescription(LibraryRange libraryRange, FrameworkName targetFramework)
+        public RuntimeLibrary GetDescription(LibraryRange libraryRange, FrameworkName targetFramework)
         {
             if (!libraryRange.IsGacOrFrameworkReference)
             {
@@ -59,29 +60,21 @@ namespace Microsoft.Dnx.Runtime
             {
                 _resolvedPaths[libraryRange.Name] = path;
 
-                return new LibraryDescription
-                {
-                    LibraryRange = libraryRange,
-                    Identity = new LibraryIdentity
-                    {
-                        Name = libraryRange.Name,
-                        Version = new SemanticVersion(assemblyVersion),
-                        IsGacOrFrameworkReference = true
-                    },
-                    LoadableAssemblies = new[] { name },
-                    Dependencies = Enumerable.Empty<LibraryDependency>()
-                };
+                return new RuntimeLibrary(
+                    libraryRange,
+                    new LibraryIdentity(libraryRange.Name, new SemanticVersion(assemblyVersion), isGacOrFrameworkReference: true),
+                    LibraryTypes.ReferenceAssembly,
+                    new[] { name });
             }
 
             return null;
         }
 
-        public void Initialize(IEnumerable<LibraryDescription> dependencies, FrameworkName targetFramework, string runtimeIdentifier)
+        public void Initialize(IEnumerable<RuntimeLibrary> dependencies, FrameworkName targetFramework, string runtimeIdentifier)
         {
             foreach (var d in dependencies)
             {
                 d.Path = _resolvedPaths[d.Identity.Name];
-                d.Type = "Assembly";
             }
         }
 

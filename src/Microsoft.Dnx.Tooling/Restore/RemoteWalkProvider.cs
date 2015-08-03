@@ -54,11 +54,7 @@ namespace Microsoft.Dnx.Tooling
 
             return new WalkProviderMatch
             {
-                Library = new LibraryIdentity
-                {
-                    Name = bestResult.Id,
-                    Version = bestResult.Version
-                },
+                Library = new LibraryIdentity(bestResult.Id, bestResult.Version, isGacOrFrameworkReference: false),
                 Path = bestResult.ContentUri,
                 Provider = this,
             };

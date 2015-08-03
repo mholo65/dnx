@@ -41,13 +41,13 @@ namespace Microsoft.Dnx.Tooling.List
             _reports = reports;
         }
 
-        public void Walk(IGraphNode<LibraryDescription> root)
+        public void Walk(IGraphNode<RuntimeLibrary> root)
         {
             _assemblyFilePaths = new HashSet<string>(StringComparer.Ordinal);
             _dependencyAssemblySources = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
             _dependencyPackageSources = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
 
-            var libraries = new HashSet<LibraryDescription>();
+            var libraries = new HashSet<RuntimeLibrary>();
             root.DepthFirstPreOrderWalk(visitNode: (node, _) => VisitLibrary(node, _, libraries));
 
             _reports.Information.WriteLine("\n[Target framework {0} ({1})]\n",
@@ -75,13 +75,13 @@ namespace Microsoft.Dnx.Tooling.List
             }
         }
 
-        private bool VisitLibrary(IGraphNode<LibraryDescription> node,
-                                  IEnumerable<IGraphNode<LibraryDescription>> ancestors,
-                                  ISet<LibraryDescription> visitedLibraries)
+        private bool VisitLibrary(IGraphNode<RuntimeLibrary> node,
+                                  IEnumerable<IGraphNode<RuntimeLibrary>> ancestors,
+                                  ISet<RuntimeLibrary> visitedLibraries)
         {
             if (visitedLibraries.Add(node.Item))
             {
-                foreach (var loadableAssembly in node.Item.LoadableAssemblies)
+                foreach (var loadableAssembly in node.Item.Assemblies)
                 {
                     AddDependencySource(_dependencyPackageSources, loadableAssembly, node.Item.Identity.Name);
 

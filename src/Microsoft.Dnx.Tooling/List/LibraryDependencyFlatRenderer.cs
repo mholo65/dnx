@@ -23,7 +23,7 @@ namespace Microsoft.Dnx.Tooling.List
             _listedProjects = new HashSet<string>(listedProjects);
         }
 
-        public IEnumerable<string> GetRenderContent(IGraphNode<LibraryDescription> root)
+        public IEnumerable<string> GetRenderContent(IGraphNode<RuntimeLibrary> root)
         {
             var dict = FindImmediateDependent(root);
             var libraries = dict.Keys.OrderBy(description => description.Identity.Name);
@@ -50,28 +50,28 @@ namespace Microsoft.Dnx.Tooling.List
             return results;
         }
 
-        private IDictionary<LibraryDescription, ISet<LibraryDescription>> FindImmediateDependent(IGraphNode<LibraryDescription> root)
+        private IDictionary<RuntimeLibrary, ISet<RuntimeLibrary>> FindImmediateDependent(IGraphNode<RuntimeLibrary> root)
         {
-            var result = new Dictionary<LibraryDescription, ISet<LibraryDescription>>();
+            var result = new Dictionary<RuntimeLibrary, ISet<RuntimeLibrary>>();
 
-            root.DepthFirstPreOrderWalk(
-                visitNode: (node, ancestors) =>
+            IGraphNodeExtensions.DepthFirstPreOrderWalk<Runtime.RuntimeLibrary>(
+root,                visitNode: (Func<IGraphNode<Runtime.RuntimeLibrary>, IEnumerable<IGraphNode<Runtime.RuntimeLibrary>>, bool>)((IGraphNode<Runtime.RuntimeLibrary> node, IEnumerable<IGraphNode<Runtime.RuntimeLibrary>> ancestors) =>
                 {
-                    ISet<LibraryDescription> slot;
-                    if (!result.TryGetValue(node.Item, out slot))
+                    ISet<Runtime.RuntimeLibrary> slot;
+                    if (!result.TryGetValue((RuntimeLibrary)node.Item, out slot))
                     {
-                        slot = new HashSet<LibraryDescription>();
-                        result.Add(node.Item, slot);
+                        slot = new HashSet<Runtime.RuntimeLibrary>();
+                        result.Add((RuntimeLibrary)node.Item, (ISet<Runtime.RuntimeLibrary>)slot);
                     }
 
                     // first item in the path is the immediate parent
                     if (ancestors.Any())
                     {
-                        slot.Add(ancestors.First().Item);
+                        slot.Add((Runtime.RuntimeLibrary)ancestors.First().Item);
                     }
 
                     return true;
-                });
+                }));
 
             // removing the root package
             result.Remove(root.Item);
@@ -79,8 +79,8 @@ namespace Microsoft.Dnx.Tooling.List
             return result;
         }
 
-        private void RenderLibraries(IEnumerable<LibraryDescription> descriptions,
-                                     IDictionary<LibraryDescription, ISet<LibraryDescription>> dependenciesMap,
+        private void RenderLibraries(IEnumerable<RuntimeLibrary> descriptions,
+                                     IDictionary<RuntimeLibrary, ISet<RuntimeLibrary>> dependenciesMap,
                                      IList<string> results)
         {
             if (!string.IsNullOrEmpty(_filterPattern))

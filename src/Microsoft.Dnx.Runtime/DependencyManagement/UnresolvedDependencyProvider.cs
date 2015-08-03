@@ -4,28 +4,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Versioning;
+using Microsoft.Framework.Runtime;
 
 namespace Microsoft.Dnx.Runtime
 {
     public class UnresolvedDependencyProvider : IDependencyProvider
     {
-        public LibraryDescription GetDescription(LibraryRange libraryRange, FrameworkName targetFramework)
+        public RuntimeLibrary GetDescription(LibraryRange libraryRange, FrameworkName targetFramework)
         {
-            return new LibraryDescription
+            return new RuntimeLibrary(
+                libraryRange,
+                new LibraryIdentity(libraryRange.Name, libraryRange.VersionRange?.MinVersion, libraryRange.IsGacOrFrameworkReference),
+                LibraryTypes.Unresolved)
             {
-                LibraryRange = libraryRange,
-                Identity = new LibraryIdentity
-                {
-                    Name = libraryRange.Name,
-                    IsGacOrFrameworkReference = libraryRange.IsGacOrFrameworkReference,
-                    Version = libraryRange.VersionRange?.MinVersion
-                },
-                Dependencies = Enumerable.Empty<LibraryDependency>(),
                 Resolved = false
             };
         }
 
-        public void Initialize(IEnumerable<LibraryDescription> dependencies, FrameworkName targetFramework, string runtimeIdentifier)
+        public void Initialize(IEnumerable<RuntimeLibrary> dependencies, FrameworkName targetFramework, string runtimeIdentifier)
         {
         }
 

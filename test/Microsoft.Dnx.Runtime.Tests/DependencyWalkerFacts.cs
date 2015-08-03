@@ -185,7 +185,7 @@ namespace Loader.Tests
             return null;
         }
 
-        public LibraryDescription GetDescription(LibraryRange libraryRange, FrameworkName frameworkName)
+        public RuntimeLibrary GetDescription(LibraryRange libraryRange, FrameworkName frameworkName)
         {
             Logger.TraceInformation("StubAssemblyLoader.GetDependencies {0} {1} {2}", libraryRange.Name, libraryRange.VersionRange, frameworkName);
             Entry entry;
@@ -197,14 +197,14 @@ namespace Loader.Tests
             var d = entry.Dependencies as LibraryDependency[] ?? entry.Dependencies.ToArray();
             Logger.TraceInformation("StubAssemblyLoader.GetDependencies {0} {1}", d.Aggregate("", (a, b) => a + " " + b), frameworkName);
 
-            return new LibraryDescription
-            {
-                Identity = new LibraryIdentity { Name = libraryRange.Name, Version = libraryRange.VersionRange.MinVersion },
-                Dependencies = entry.Dependencies
-            };
+            return new RuntimeLibrary(
+                libraryRange,
+                new LibraryIdentity(libraryRange.Name, libraryRange.VersionRange.MinVersion, isGacOrFrameworkReference: false),
+                type: "Test",
+                dependencies: entry.Dependencies);
         }
 
-        public void Initialize(IEnumerable<LibraryDescription> packages, FrameworkName frameworkName, string runtimeIdentifier)
+        public void Initialize(IEnumerable<RuntimeLibrary> packages, FrameworkName frameworkName, string runtimeIdentifier)
         {
             var d = packages.Select(CreateDependency).ToArray();
 
@@ -214,7 +214,7 @@ namespace Loader.Tests
             FrameworkName = frameworkName;
         }
 
-        private static LibraryDependency CreateDependency(LibraryDescription libraryDescription)
+        private static LibraryDependency CreateDependency(RuntimeLibrary libraryDescription)
         {
             return new LibraryDependency
             {
@@ -234,11 +234,7 @@ namespace Loader.Tests
         {
             var entry = new Entry
             {
-                Key = new LibraryIdentity
-                {
-                    Name = name,
-                    Version = version == null ? null : new SemanticVersion(version)
-                }
+                Key = new LibraryIdentity(name, version == null ? null : new SemanticVersion(version), isGacOrFrameworkReference: false)
             };
 
             _entries[entry.Key] = entry;

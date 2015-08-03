@@ -12,19 +12,19 @@ namespace Microsoft.Dnx.Tooling.List
 {
     public class LibraryDependencyFinder
     {
-        public static IGraphNode<LibraryDescription> Build([NotNull] IList<LibraryDescription> libraries, 
+        public static IGraphNode<RuntimeLibrary> Build([NotNull] IList<RuntimeLibrary> libraries, 
                                                            [NotNull]Runtime.Project project)
         {
             var libDictionary = libraries.ToDictionary(desc => desc.Identity);
 
-            LibraryDescription root;
-            if (!libDictionary.TryGetValue(new LibraryIdentity { Name = project.Name, Version = project.Version }, out root))
+            RuntimeLibrary root;
+            if (!libDictionary.TryGetValue(new LibraryIdentity(project.Name, project.Version, isGacOrFrameworkReference: false), out root))
             {
                 throw new InvalidOperationException(string.Format("Failed to retrieve {0} of project {1} - {2}", typeof(LibraryDependency).Name, project.Name, project.Version));
             }
 
             // build a tree of LibraryDescriptions of the given project root
-            return DepthFirstGraphTraversal.PostOrderWalk<LibraryDescription, IGraphNode<LibraryDescription>>(
+            return DepthFirstGraphTraversal.PostOrderWalk<RuntimeLibrary, IGraphNode<RuntimeLibrary>>(
                 node: root,
                 getChildren: node =>
                 {
@@ -34,12 +34,12 @@ namespace Microsoft.Dnx.Tooling.List
                     }
                     else
                     {
-                        return Enumerable.Empty<LibraryDescription>();
+                        return Enumerable.Empty<RuntimeLibrary>();
                     }
                 },
                 visitNode: (node, children) =>
                 {
-                    return new GraphNode<LibraryDescription>(node, children);
+                    return new GraphNode<RuntimeLibrary>(node, children);
                 });
         }
 

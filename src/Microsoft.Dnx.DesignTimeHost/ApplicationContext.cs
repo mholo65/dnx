@@ -1224,7 +1224,7 @@ namespace Microsoft.Dnx.DesignTimeHost
             return Path.GetFullPath(Path.Combine(referencedProject.ProjectDirectory, path));
         }
 
-        private static DependencyDescription CreateDependencyDescription(LibraryDescription library)
+        private static DependencyDescription CreateDependencyDescription(RuntimeLibrary library)
         {
             return new DependencyDescription
             {
